@@ -148,10 +148,9 @@ class MakeYourOwn(Stereo):
             #from google.colab import files
             #files.download(filename)
             print('''
-            You're using google colaboratory.
-            Please click the folder icon in the
-            left menubar to access all images
-            that you have created.
+            In colaboratory, please click the folder icon
+            in the left menubar to access all the new
+            stereographic images you create.
             ''')
         else:
             #with self.messages:
