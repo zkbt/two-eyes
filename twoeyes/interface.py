@@ -1,10 +1,12 @@
 from .imports import *
+from .stereo import Stereo
 from ipywidgets import GridspecLayout, FileUpload, Output, Layout
 from IPython.display import clear_output
 
+__all__ = ['MakeYourOwn']
 
-class MakeStereo:
-    def __init__(self):
+class MakeYourOwn(Stereo):
+    def __init__(self, prefix='stereograph'):
         '''
         Initialize an object to make a stereograph interactively
         from within a jupyter notebook (including one that might
@@ -13,8 +15,7 @@ class MakeStereo:
 
         # create a dictionary to store objects for the two eyes
         self.eyes = {'left':{}, 'right':{}}
-
-
+        self.left, self.right = None, None
         #create the overall layout
         gs = GridspecLayout(2, 2, height='350px', width='620px')
 
@@ -40,6 +41,7 @@ class MakeStereo:
 
             # do put a random image into
             with self.eyes[k]['image-output']:
+                """
                 img = np.random.normal(0, 1, (10,10))
                 self.eyes[k]['figure'] = plt.figure(k, figsize=(2,2), dpi=100)
                 '''fig.canvas.toolbar_visible = False
@@ -52,34 +54,36 @@ class MakeStereo:
                 self.eyes[k]['imshow'] = plt.imshow(img)
                 plt.axis('off')
                 plt.show(self.eyes[k]['figure'])
+                """
 
-            # have the uploaders observe for changes
-            self.eyes[k]['upload'].observe(self.update_image,
-                                           names='value')
-
+        Stereo.__init__(self, prefix=prefix)
         display(gs)
 
+    def load(self, *args, **kwargs):
+        for eye in ['left', 'right']:
+            # have the uploaders observe for changes
+            self.eyes[eye]['upload'].observe(self.update_image,
+                                           names='value')
+
     def update_image(self, change):
-        print(change.keys())
-        print()
-        k = change['owner'].description
-        print(k)
+        eye = change['owner'].description
         uploaded = change['owner']
         filename = uploaded.metadata[0]['name']
-        print(filename)
         extension = filename.split('.')[-1]
         file = uploaded.value[filename]
         bytes = file['content']
-        local_image_filename = f'{k}.{extension}'
+        local_image_filename = f'{eye}.{extension}'
         with open(local_image_filename,'wb') as f:
             f.write(bytes)
-        print(f'wrote to {local_image_filename}')
-        img = plt.imread(local_image_filename)
-        print(f'updating plot for {k}')
-        print(self.eyes[k]['ax'])
-        print(k)
 
-        with self.eyes[k]['image-output']:
+        print(f'wrote to {local_image_filename}')
+        img = Image.open(local_image_filename)
+
+        self.__dict__[eye] = img
+        with self.eyes[eye]['image-output']:
             clear_output()
-            self.eyes[k]['ax'].imshow(img)
-            display(self.eyes[k]['figure'])
+            display(img)
+
+        if (self.left is not None) and (self.right is not None):
+            self.to_gif()
+            self.to_anaglyph()

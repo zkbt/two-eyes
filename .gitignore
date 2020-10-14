@@ -1,5 +1,6 @@
 *.jpg
 *.JPG
+*.gif
 *.ipynb
 .DS_Store
 

@@ -1,2 +1,2 @@
-from .stereo import Stereo
+from .stereo import *
 from .interface import *

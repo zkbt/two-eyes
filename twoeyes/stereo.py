@@ -1,6 +1,6 @@
 from .iplot import *
 
-
+__all__ = ['Stereo']
 def add_number_to_filename(filename, i):
     components = filename.split('.')
     components[-2] += f'-{i:03.0f}'
