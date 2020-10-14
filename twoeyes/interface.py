@@ -136,17 +136,18 @@ class MakeYourOwn(Stereo):
                 print('Please upload images that are the same size!')
                 return
 
-            if self.do['redcyan'].value:
-                filename = self.to_anaglyph()
-                self.display_stereograph(filename)
-            if self.do['gif'].value:
-                filename = self.to_gif()
-                self.display_stereograph(filename)
+        if self.do['redcyan'].value:
+            filename = self.to_anaglyph()
+            self.display_stereograph(filename)
+        if self.do['gif'].value:
+            filename = self.to_gif()
+            self.display_stereograph(filename)
 
     def display_stereograph(self, filename):
         if self.colab:
             from google.colab import files
             files.download(filename)
         else:
-            html = HTML(f"<img src='{filename}' width=620px>")
-            display(html)
+            with self.messages:
+                html = HTML(f"<img src='{filename}' width=620px>")
+                display(html)
