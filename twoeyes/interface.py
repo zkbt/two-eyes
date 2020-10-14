@@ -37,13 +37,12 @@ class MakeYourOwn(Stereo):
 
             # create a widget to display an image ...
             self.eyes[k]['image-output'] = Output(layout = {'border': '4px solid gray',
-                                                            'height': '300px',
+                                                            'height': 'auto',
                                                             'width' : '300px'})
             #... and include it in thte widget layout
             #gs[1, i] = self.eyes[k]['image-output']
 
-            self.eyes[k]['text-output'] = Output(layout = {'border': '1px solid gray',
-                                                           'width' : '300px'})
+            self.eyes[k]['text-output'] = Output(layout = {'width' : '300px'})
 
             self.eyes[k]['vbox'] = VBox([self.eyes[k]['upload'],
                                          self.eyes[k]['image-output'],
@@ -71,7 +70,7 @@ class MakeYourOwn(Stereo):
         self.do['redcyan'] = Checkbox(value=True, description='red/cyan', layout=Layout(width='auto'))
         self.do['gif'] = Checkbox(value=True, description='animated', layout=Layout(width='auto'))
         #do_sidebyside = Checkbox(value=False, description='sidebyside', layout=Layout(width='auto'))
-        options = VBox([self.do['redcyan'], self.do['gif']], layout=Layout(border='1px solid black', width='300px', align_items='flex-start', margin='0px 10px 0px 10px') )
+        options = VBox([self.do['redcyan'], self.do['gif']], layout=Layout(width='300px', align_items='flex-start', margin='0px 10px 0px 10px') )
         make = Button(description='Make stereograph(s)!',
                       tooltip='Make stereograph(s)!',
                       icon='check',
@@ -136,18 +135,25 @@ class MakeYourOwn(Stereo):
                 print('Please upload images that are the same size!')
                 return
 
-        if self.do['redcyan'].value:
-            filename = self.to_anaglyph()
-            self.display_stereograph(filename)
-        if self.do['gif'].value:
-            filename = self.to_gif()
-            self.display_stereograph(filename)
+
+            if self.do['redcyan'].value:
+                filename = self.to_anaglyph()
+                self.display_stereograph(filename)
+            if self.do['gif'].value:
+                filename = self.to_gif()
+                self.display_stereograph(filename)
 
     def display_stereograph(self, filename):
         if self.colab:
-            from google.colab import files
-            files.download(filename)
+            #from google.colab import files
+            #files.download(filename)
+            print('''
+            You're using google colaboratory.
+            Please click the folder icon in the
+            left menubar to access all images
+            that you have created.
+            ''')
         else:
-            with self.messages:
-                html = HTML(f"<img src='{filename}' width=620px>")
-                display(html)
+            #with self.messages:
+            html = HTML(f"<img src='{filename}' width=620px>")
+            display(html)

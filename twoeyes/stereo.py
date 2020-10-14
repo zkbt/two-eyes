@@ -106,9 +106,7 @@ class Stereo:
         Output stereograph as a side-by-side image pair.
         '''
 
-        print('Making a side-by-side stereograph...')
-
-        label = 'sidebyside'
+        label = 'side-by-side'
 
         # convert images to arrays, but keep them as colors (width x height x 3)
         left = np.array(self.left)
@@ -121,17 +119,16 @@ class Stereo:
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
         filename = create_safe_filename(base_filename)
         combined.save(filename)
-        print(f' ....saved to {filename}')
+        print(f'Saved {label} stereograph saved to {filename}')
         return filename
 
     def to_anaglyph(self, directory=''):
         '''
         Output stereograph as a red-cyan image pair.
         '''
-        print('Making a red/cyan stereograph...')
 
         # set the label
-        label = 'redcyan'
+        label = 'red-cyan'
 
         # first convert images to black and white (width x height)
         left = np.array(self.left.convert('L'))
@@ -148,15 +145,13 @@ class Stereo:
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
         filename = create_safe_filename(base_filename)
         combined.save(filename)
-        print(f' ....saved to {filename}')
+        print(f'Saved {label} stereograph saved to {filename}')
         return filename
 
     def to_gif(self, directory=''):
         '''
         Output stereograph as an animated gif.
         '''
-        print('Making an animated GIF stereograph...')
-
         # set the label
         label = 'animated'
 
@@ -168,5 +163,5 @@ class Stereo:
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.gif')
         filename = create_safe_filename(base_filename)
         left.save(filename, save_all=True, append_images=[right], optimize=True, duration=500, loop=0)
-        print(f' ....saved to {filename}')
+        print(f'Saved {label} stereograph saved to {filename}')
         return filename
