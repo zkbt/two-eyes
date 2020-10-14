@@ -92,7 +92,7 @@ class MakeYourOwn(Stereo):
                            self.messages])
 
         Stereo.__init__(self, prefix=prefix)
-        self.reset_instructions()
+        self.reset_instructions('Please upload two images to make a 3D image.')
         display(everything)
 
     def load(self, *args, **kwargs):
@@ -104,10 +104,10 @@ class MakeYourOwn(Stereo):
         # watch the button click
         self.make_button.on_click(self.make_stereographs)
 
-    def reset_instructions(self):
+    def reset_instructions(self, message=''):
         with self.instructions:
             clear_output()
-            print('Please upload two images to make a 3D image.')
+            print(message)
 
     def update_image(self, change):
 
@@ -137,11 +137,13 @@ class MakeYourOwn(Stereo):
             clear_output()
             print(f'{filename}\n ({img.width}x{img.height} pixels)')
 
-        if (self.left is None) or (self.right is None):
-            self.reset_instructions()
+        if (self.left is not None) and (self.right is not None):
+            self.reset_instructions("Two images have been uploaded. You're ready to make a stereograph!")
+        elif (self.left is None) or (self.right is None):
+            self.reset_instructions('Please upload a second image to make a 3D image.')
         else:
-            with self.instructions:
-                clear_output()
+            self.reset_instructions('')
+
     def make_stereographs(self, change):
 
         with self.messages:
