@@ -119,7 +119,7 @@ class MakeYourOwn(Stereo):
 
         with self.eyes[eye]['text-output']:
             clear_output()
-            print(f'{filename} ({img.width}x{img.height} px)')
+            print(f'{filename}\n ({img.width}x{img.height} pixels)')
 
     def make_stereographs(self, change):
 

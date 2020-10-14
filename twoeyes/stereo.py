@@ -119,7 +119,7 @@ class Stereo:
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
         filename = create_safe_filename(base_filename)
         combined.save(filename)
-        print(f'Saved {label} stereograph saved to {filename}')
+        print(f'Saved {label} stereograph to {filename}')
         return filename
 
     def to_anaglyph(self, directory=''):
@@ -145,7 +145,7 @@ class Stereo:
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
         filename = create_safe_filename(base_filename)
         combined.save(filename)
-        print(f'Saved {label} stereograph saved to {filename}')
+        print(f'Saved {label} stereograph to {filename}')
         return filename
 
     def to_gif(self, directory=''):
@@ -163,5 +163,5 @@ class Stereo:
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.gif')
         filename = create_safe_filename(base_filename)
         left.save(filename, save_all=True, append_images=[right], optimize=True, duration=500, loop=0)
-        print(f'Saved {label} stereograph saved to {filename}')
+        print(f'Saved {label} stereograph to {filename}')
         return filename
