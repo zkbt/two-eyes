@@ -3,7 +3,7 @@ from .iplot import *
 
 def add_number_to_filename(filename, i):
     components = filename.split('.')
-    components[-2] += f'{i:03.0f}'
+    components[-2] += f'-{i:03.0f}'
     return '.'.join(components)
 
 def create_safe_filename(filename):
@@ -20,7 +20,7 @@ class Stereo:
     '''
     A generic stereographic image.
     '''
-    def __init__(self, left=None, right=None, prefix=''):
+    def __init__(self, left=None, right=None, prefix='stereograph'):
         '''
         Initialize a new stereograph.
 
@@ -51,7 +51,7 @@ class Stereo:
         for eye in ['left', 'right']:
             print(f"  loading {eye} eye's image from {self.filenames[eye]}")
             # store images in self.left and self.right
-            self.__dict__[k] = Image.open(self.filenames[k])
+            self.__dict__[eye] = Image.open(self.filenames[eye])
             print("   success!")
 
     def adjust(self):
@@ -116,8 +116,8 @@ class Stereo:
         combined = Image.fromarray(np.hstack([left,right]))
 
         # save to an image file
-        filename = create_safe_filename('{self.prefix}-{label}.jpg')
-        combined.save(create_safe_filename(filename))
+        filename = create_safe_filename(f'{self.prefix}-{label}.jpg')
+        combined.save(filename)
         return filename
 
     def to_anaglyph(self):
@@ -140,6 +140,23 @@ class Stereo:
         combined = Image.fromarray(merged)
 
         # save to an image file
-        filename = create_safe_filename('{self.prefix}-{label}.jpg')
-        combined.save(create_safe_filename(filename))
+        filename = create_safe_filename(f'{self.prefix}-{label}.jpg')
+        combined.save(filename)
+        return filename
+
+    def to_gif(self):
+        '''
+        Output stereograph as an animated gif.
+        '''
+
+        # set the label
+        label = 'animated'
+
+        # convert images to arrays, but keep them as colors (width x height x 3)
+        left = self.left
+        right = self.right
+
+        # save to an image file
+        filename = create_safe_filename(f'{self.prefix}-{label}.gif')
+        left.save(filename, save_all=True, append_images=[right], optimize=True, duration=500, loop=0)
         return filename
