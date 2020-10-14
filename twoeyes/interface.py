@@ -22,6 +22,8 @@ class MakeYourOwn(Stereo):
         #create the overall layout
         gs = GridspecLayout(2, 2, height='350px', width='620px')
 
+        self.instructions = Output(layout=Layout(width='auto'))
+
         # loop over two eyes
         for i, k in enumerate(['left', 'right']):
 
@@ -84,9 +86,13 @@ class MakeYourOwn(Stereo):
                               layout=Layout())
 
         self.messages = Output(layout=Layout(width='auto'))
-        everything = VBox([eyes_together, actions_together, self.messages])
+        everything = VBox([self.instructions,
+                           eyes_together,
+                           actions_together,
+                           self.messages])
 
         Stereo.__init__(self, prefix=prefix)
+        self.reset_instructions()
         display(everything)
 
     def load(self, *args, **kwargs):
@@ -98,10 +104,20 @@ class MakeYourOwn(Stereo):
         # watch the button click
         self.make_button.on_click(self.make_stereographs)
 
+    def reset_instructions(self):
+        with self.instructions:
+            clear_output()
+            print('Please upload two images to make a 3D image.')
+
     def update_image(self, change):
+
         eye = change['owner'].description.split(' ')[1]
         uploaded = change['owner']
         filename = uploaded.metadata[0]['name']
+
+        with self.instructions:
+            clear_output()
+            print(f'File {filename} is loading.\nPlease have patience.')
         extension = filename.split('.')[-1]
         file = uploaded.value[filename]
         bytes = file['content']
@@ -121,6 +137,11 @@ class MakeYourOwn(Stereo):
             clear_output()
             print(f'{filename}\n ({img.width}x{img.height} pixels)')
 
+        if (self.left is None) or (self.right is None):
+            self.reset_instructions()
+        else:
+            with self.instructions:
+                clear_output()
     def make_stereographs(self, change):
 
         with self.messages:
