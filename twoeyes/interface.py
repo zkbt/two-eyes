@@ -6,12 +6,15 @@ from IPython.display import clear_output, display, HTML
 __all__ = ['MakeYourOwn']
 
 class MakeYourOwn(Stereo):
-    def __init__(self, prefix='stereograph'):
+    def __init__(self, prefix='stereograph', colab=False):
         '''
         Initialize an object to make a stereograph interactively
         from within a jupyter notebook (including one that might
         be hosted on colaboratory).
         '''
+
+        # is this in colab?
+        self.colab = colab
 
         # create a dictionary to store objects for the two eyes
         self.eyes = {'left':{}, 'right':{}}
@@ -135,9 +138,15 @@ class MakeYourOwn(Stereo):
 
             if self.do['redcyan'].value:
                 filename = self.to_anaglyph()
-                html = HTML(f"<img src='{filename}' width=620px>")
-                display(html)
+                self.display_stereograph(filename)
             if self.do['gif'].value:
                 filename = self.to_gif()
-                html = HTML(f"<img src='{filename}' width=620px>")
-                display(html)
+                self.display_stereograph(filename)
+
+    def display_stereograph(self, filename):
+        if self.colab:
+            from google.colab import files
+            files.download(filename)
+        else:
+            html = HTML(f"<img src='{filename}' width=620px>")
+            display(html)
