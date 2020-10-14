@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-
+import optparse
 
 #s = Stereo('couchtest/left.jpg','couchtest/right.jpg')
 if __name__ == '__main__':
 
-    print ""
+    print()
 
     # parse the input options
     parser = optparse.OptionParser(usage = """
@@ -26,7 +26,7 @@ Options:
                         """.format(len(args)))
 
     # create the stereo image
-    print "Creating a stereo image from your two input images!"
+    print("Creating a stereo image from your two input images!")
     s = Stereo(*args)
 
 
