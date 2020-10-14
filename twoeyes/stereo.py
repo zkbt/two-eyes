@@ -101,10 +101,12 @@ class Stereo:
             right = right[:nudgey, :]
         self.left, self.right = Image.fromarray(left), Image.fromarray(right)
 
-    def to_sidebyside(self):
+    def to_sidebyside(self, directory=''):
         '''
         Output stereograph as a side-by-side image pair.
         '''
+
+        print('Making a side-by-side stereograph...')
 
         label = 'sidebyside'
 
@@ -116,14 +118,17 @@ class Stereo:
         combined = Image.fromarray(np.hstack([left,right]))
 
         # save to an image file
-        filename = create_safe_filename(f'{self.prefix}-{label}.jpg')
+        base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
+        filename = create_safe_filename(base_filename)
         combined.save(filename)
+        print(f' ....saved to {filename}')
         return filename
 
-    def to_anaglyph(self):
+    def to_anaglyph(self, directory=''):
         '''
         Output stereograph as a red-cyan image pair.
         '''
+        print('Making a red/cyan stereograph...')
 
         # set the label
         label = 'redcyan'
@@ -140,14 +145,17 @@ class Stereo:
         combined = Image.fromarray(merged)
 
         # save to an image file
-        filename = create_safe_filename(f'{self.prefix}-{label}.jpg')
+        base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
+        filename = create_safe_filename(base_filename)
         combined.save(filename)
+        print(f' ....saved to {filename}')
         return filename
 
-    def to_gif(self):
+    def to_gif(self, directory=''):
         '''
         Output stereograph as an animated gif.
         '''
+        print('Making an animated GIF stereograph...')
 
         # set the label
         label = 'animated'
@@ -157,6 +165,8 @@ class Stereo:
         right = self.right
 
         # save to an image file
-        filename = create_safe_filename(f'{self.prefix}-{label}.gif')
+        base_filename = os.path.join(directory, f'{self.prefix}-{label}.gif')
+        filename = create_safe_filename(base_filename)
         left.save(filename, save_all=True, append_images=[right], optimize=True, duration=500, loop=0)
+        print(f' ....saved to {filename}')
         return filename

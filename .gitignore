@@ -3,6 +3,7 @@
 *.gif
 *.ipynb
 .DS_Store
+two-eyes-examples
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
