@@ -86,17 +86,17 @@ class MakeYourOwn(Stereo):
         padding = self.padding
 
         # set up the layout for the widgets
-        todo = VBox([Label('Output Types:'), self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(border=f'2px solid green'))
+        todo = VBox([Label('Output Types:'), self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout())
         labeled_rotation = VBox([Label('Rotation:'), self.widgets['rotation']])
 
-        options = VBox([labeled_rotation, todo], layout=Layout(border=f'2px solid green', width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
+        options = VBox([labeled_rotation, todo], layout=Layout( width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
         everything = VBox([self.widgets['instructions'],
                            self.widgets['left-vbox'],
                            self.widgets['right-vbox'],
                            options,
                            self.widgets['make-button'],
                            self.widgets['outputs']],
-                           layout=Layout(border=f'2px solid green', width=f'{width+padding*2}px'))
+                           layout=Layout(width=f'{width+padding*2}px'))
         return everything
 
     def create_widgets(self):
