@@ -32,6 +32,9 @@ class Stereo:
             Filename of the right image.
         '''
 
+        # create a dictionary for the left and right images
+        self.images = dict(left=None, right=None)
+
         # load the images from their files
         self.load(left, right)
 
@@ -50,8 +53,8 @@ class Stereo:
         # loop over the eyes, loading the image for each
         for eye in ['left', 'right']:
             print(f"  loading {eye} eye's image from {self.filenames[eye]}")
-            # store images in self.left and self.right
-            self.__dict__[eye] = Image.open(self.filenames[eye])
+            # store images in self.images['left'] and self.images['right']
+            self.images[eye] = Image.open(self.filenames[eye])
             print("   success!")
 
     def adjust(self):
@@ -86,7 +89,7 @@ class Stereo:
         nudgex, nudgey = self.referencepoints['right']-self.referencepoints['left']
 
         print(" Applying a nudge of {0} pixels between the two images.".format((nudgex,nudgey)))
-        left, right = np.array(self.left), np.array(self.right)
+        left, right = np.array(self.images['left']), np.array(self.images['right'])
         if nudgex > 0:
             left = left[:,:-nudgex]
             right = right[:,nudgex:]
@@ -99,7 +102,7 @@ class Stereo:
         else:
             left = left[-nudgey:, :]
             right = right[:nudgey, :]
-        self.left, self.right = Image.fromarray(left), Image.fromarray(right)
+        self.images['left'], self.images['right'] = Image.fromarray(left), Image.fromarray(right)
 
     def to_sidebyside(self, directory=''):
         '''
@@ -109,8 +112,8 @@ class Stereo:
         label = 'side-by-side'
 
         # convert images to arrays, but keep them as colors (width x height x 3)
-        left = np.array(self.left)
-        right = np.array(self.right)
+        left = np.array(self.images['left'])
+        right = np.array(self.images['right'])
 
         # construct a comined image by stacking the images side by side
         combined = Image.fromarray(np.hstack([left,right]))
@@ -131,11 +134,11 @@ class Stereo:
         label = 'red-cyan'
 
         # first convert images to black and white (width x height)
-        left = np.array(self.left.convert('L'))
-        right = np.array(self.right.convert('L'))
+        left = np.array(self.images['left'].convert('L'))
+        right = np.array(self.images['right'].convert('L'))
 
         # construct a combined image by populating the RGB channels
-        merged = np.zeros_like(np.array(self.left))
+        merged = np.zeros_like(np.array(self.images['left']))
         merged[:,:,0] += left
         merged[:,:,1] += right
         merged[:,:,2] += right
@@ -156,8 +159,8 @@ class Stereo:
         label = 'animated'
 
         # convert images to arrays, but keep them as colors (width x height x 3)
-        left = self.left
-        right = self.right
+        left = self.images['left']
+        right = self.images['right']
 
         # save to an image file
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.gif')

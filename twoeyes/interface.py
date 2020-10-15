@@ -6,118 +6,140 @@ from IPython.display import clear_output, display, HTML
 __all__ = ['MakeYourOwn']
 
 class MakeYourOwn(Stereo):
-    def __init__(self, prefix='stereograph', colab=False):
+    def __init__(self, prefix='stereograph',
+                       width=300,
+                       padding=10,
+                       colab=False):
         '''
         Initialize an object to make a stereograph interactively
         from within a jupyter notebook (including one that might
         be hosted on colaboratory).
+
+        Parameters
+        ----------
+        prefix : str
+            How should we start the filenames?
+        width : int
+            How wide is one eye in the UI, in pixels?
+        padding : int
+            What's the padding between eyes, in pixels?
+        colab : bool
+            Is this being run inside of colaboratory?
         '''
 
         # is this in colab?
         self.colab = colab
 
-        # create a dictionary to store objects for the two eyes
-        self.eyes = {'left':{}, 'right':{}}
-        self.left, self.right = None, None
-        #create the overall layout
-        gs = GridspecLayout(2, 2, height='350px', width='620px')
 
-        self.instructions = Output(layout=Layout(width='auto'))
+        # create a dictionary to hold all the widgets
+        self.widgets = {}
+
+        # create a widget to display some instrucions
+        self.widgets['instrucions'] = Output(layout=Layout(width=f'{(width+padding)*2}px'))
 
         # loop over two eyes
         for i, k in enumerate(['left', 'right']):
 
-
-            # create a widget to upload a file ...
-            self.eyes[k]['upload'] = FileUpload(description=f"Upload {k} image.",
+            # create a widget to upload a file for each eye
+            self.widgets[f'{k}-upload'] = FileUpload(
+                                           description=f"Upload {k} image.",
                                            accept='',
                                            multiple=False,
-                                           layout=Layout( width='auto'),
+                                           layout=Layout(width='auto'),
                                            name=k)
-            # ...and include it in the widget layout
-            #gs[0, i] = self.eyes[k]['upload']
 
-            # create a widget to display an image ...
-            self.eyes[k]['image-output'] = Output(layout = {'border': '4px solid gray',
-                                                            'height': 'auto',
-                                                            'width' : '300px'})
-            #... and include it in thte widget layout
-            #gs[1, i] = self.eyes[k]['image-output']
+            # create a widget to display an image
+            self.widgets[f'{k}-image-output'] = Output(layout=Layout(border='4px solid gray',
+                                                                     height='auto',
+                                                                     width=f'{width}px'))
 
-            self.eyes[k]['text-output'] = Output(layout = {'width' : '300px'})
+            # create a widget to store image information
+            self.widgets[f'{k}-text-output'] = Output(layout=Layout(width=f'{width}px'))
 
-            self.eyes[k]['vbox'] = VBox([self.eyes[k]['upload'],
-                                         self.eyes[k]['image-output'],
-                                         self.eyes[k]['text-output']],
-                                         layout=Layout(height='auto', align_items='center', padding='10px'))
+            # create a widget to connect everything for each eye
+            self.widgets[f'{k}-vbox'] = VBox([self.widgets[f'{k}-upload'],
+                                              self.widgets[f'{k}-image-output'],
+                                              self.widgets[f'{k}-text-output']],
+                                         layout=Layout(height='auto', align_items='center', padding=f'{padding}px'))
 
+        # create widgets for what kinds of stereographs to make
+        self.widgets['do-redcyan'] = Checkbox(value=True, description='red/cyan', layout=Layout(width='auto'))
+        self.widgets['do-gif'] = Checkbox(value=False, description='animated', layout=Layout(width='auto'))
+        #self.widgets['do-sidebyside'] = Checkbox(value=False, description='sidebyside', layout=Layout(width='auto'))
+        options = VBox([self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(align_items='flex-start', width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
 
-            # do put a random image into
-            with self.eyes[k]['image-output']:
-                """
-                img = np.random.normal(0, 1, (10,10))
-                self.eyes[k]['figure'] = plt.figure(k, figsize=(2,2), dpi=100)
-                '''fig.canvas.toolbar_visible = False
-                fig.canvas.header_visible = False
-                fig.canvas.footer_visible = False
-                fig.canvas.resizable = False'''
-
-                self.eyes[k]['ax'] =  self.eyes[k]['figure'].add_axes([0, 0, 1, 1])
-                plt.sca(self.eyes[k]['ax'])
-                self.eyes[k]['imshow'] = plt.imshow(img)
-                plt.axis('off')
-                plt.show(self.eyes[k]['figure'])
-                """
-        self.do = {}
-        self.do['redcyan'] = Checkbox(value=True, description='red/cyan', layout=Layout(width='auto'))
-        self.do['gif'] = Checkbox(value=True, description='animated', layout=Layout(width='auto'))
-        #do_sidebyside = Checkbox(value=False, description='sidebyside', layout=Layout(width='auto'))
-        options = VBox([self.do['redcyan'], self.do['gif']], layout=Layout(width='300px', align_items='flex-start', margin='0px 10px 0px 10px') )
+        # create widget for making the stereographs
         make = Button(description='Make stereograph(s)!',
                       tooltip='Make stereograph(s)!',
                       icon='check',
-                      layout=Layout(width='300px', margin='0px 10px 0px 10px'))
-        self.make_button = make
+                      layout=Layout(width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
+        self.widgets['make-button'] = make
 
+
+        # create widget for outputs
+        self.widgets['outputs'] = Output(layout=Layout(width=f'{(width + padding)*2}px'))
+
+        # group the widgets into layouts
         actions_together = HBox([options, make])
-
-        eyes_together = HBox([self.eyes['left']['vbox'],
-                              self.eyes['right']['vbox']],
+        eyes_together = HBox([self.widgets['left-vbox'],
+                              self.widgets['right-vbox']],
                               layout=Layout())
-
-        self.messages = Output(layout=Layout(width='auto'))
-        everything = VBox([self.instructions,
+        everything = VBox([self.widgets['instrucions'],
                            eyes_together,
                            actions_together,
-                           self.messages])
+                           self.widgets['outputs']])
 
+        # initialize the stereo viewer overall
         Stereo.__init__(self, prefix=prefix)
-        self.reset_instructions('Please upload two images to make a 3D image.')
+
+        # set initial instructions
+        self.reset_instructions('Hi! Please upload two images to make a 3D image.')
         display(everything)
 
     def load(self, *args, **kwargs):
-        # watch for the image uploads
+        '''
+        Start the interactions running.
+        (This is called by Stereo.__init__)
+        '''
+
+        # watch for new image uploads
         for eye in ['left', 'right']:
-            self.eyes[eye]['upload'].observe(self.update_image,
+            self.widgets[f'{eye}-upload'].observe(self.update_image,
                                              names='value')
 
         # watch the button click
-        self.make_button.on_click(self.make_stereographs)
+        self.widgets['make-button'].on_click(self.make_stereographs)
 
     def reset_instructions(self, message=''):
-        with self.instructions:
+        '''
+        Clear the instructions and add new text.
+        '''
+        with self.widgets['instrucions']:
             clear_output()
             print(message)
 
     def update_image(self, change):
+        '''
+        Update an image by saving it,
+        loading it, and displaying it.
 
+        (Could probably be faster
+        with directly reading the
+        image from bytestream in
+        the uploaded file...)
+        '''
+
+        # figure out the filename
         eye = change['owner'].description.split(' ')[1]
         uploaded = change['owner']
         filename = uploaded.metadata[0]['name']
 
-        with self.instructions:
+        # provide an update that this will take a while
+        with self.widgets['instrucions']:
             clear_output()
-            print(f'File {filename} is loading.\nPlease have patience.')
+            print(f'File {filename} is loading.\nPlease have patience (or upload a smaller image).')
+
+        # save the file, with its original extension
         extension = filename.split('.')[-1]
         file = uploaded.value[filename]
         bytes = file['content']
@@ -125,57 +147,62 @@ class MakeYourOwn(Stereo):
         with open(local_image_filename,'wb') as f:
             f.write(bytes)
 
-        #print(f'wrote to {local_image_filename}')
-        img = Image.open(local_image_filename)
-
-        self.__dict__[eye] = img
-        with self.eyes[eye]['image-output']:
+        # load that file as a PIL image
+        self.images[eye] = Image.open(local_image_filename)
+        with self.widgets[f'{eye}-image-output']:
             clear_output()
-            display(img)
+            display(self.images[eye])
 
-        with self.eyes[eye]['text-output']:
+        # print a summary of the image as text
+        with self.widgets[f'{eye}-text-output']:
             clear_output()
-            print(f'{filename}\n ({img.width}x{img.height} pixels)')
+            print(f'{filename}\n ({self.images[eye].width}x{self.images[eye].height} pixels)')
 
-        if (self.left is not None) and (self.right is not None):
+        # update instructions
+        if (self.images['left'] is not None) and (self.images['right'] is not None):
             self.reset_instructions("Two images have been uploaded. You're ready to make a stereograph!")
-        elif (self.left is None) or (self.right is None):
+        elif (self.images['left'] is None) or (self.images['right'] is None):
             self.reset_instructions('Please upload a second image to make a 3D image.')
         else:
             self.reset_instructions('')
 
     def make_stereographs(self, change):
-
-        with self.messages:
+        '''
+        Produce stereographs when the button is pressed.
+        '''
+        with self.widgets['outputs']:
             clear_output()
-            if self.left is None:
+            if self.images['left'] is None:
                 print('Please upload a left image.')
                 return
-            if self.right is None:
+            if self.images['right'] is None:
                 print('Please upload a right image.')
                 return
-            if (self.left.width != self.right.width) or (self.left.height != self.right.height):
+            if (self.images['left'].width != self.images['right'].width) or (self.images['left'].height != self.images['right'].height):
                 print('Please upload images that are the same size!')
                 return
 
-
-            if self.do['redcyan'].value:
+        if self.widgets['do-redcyan'].value:
+            with self.widgets['outputs']:
                 filename = self.to_anaglyph()
-                self.display_stereograph(filename)
-            if self.do['gif'].value:
+            self.display_stereograph(filename)
+        if self.widgets['do-gif'].value:
+            with self.widgets['outputs']:
                 filename = self.to_gif()
-                self.display_stereograph(filename)
+            self.display_stereograph(filename)
 
     def display_stereograph(self, filename):
-        if self.colab:
-            #from google.colab import files
-            #files.download(filename)
-            print('''
-            In colaboratory, please click the folder icon
-            in the left menubar to access all the new
-            stereographic images you create.
-            ''')
-        else:
-            #with self.messages:
-            html = HTML(f"<img src='{filename}' width=620px>")
-            display(html)
+        '''
+        Display a stereograph from a file.
+        '''
+
+        with self.widgets['outputs']:
+            print(f'Displaying stereograph (may take a moment).')
+            if self.colab:
+                print('''
+        | In colaboratory, you can use the File Browser   |
+        | (folder icon) to directly access all newly      |
+        | created stereographic image files for download. |
+                ''')
+            i = Image.open(filename)
+            display(i)
