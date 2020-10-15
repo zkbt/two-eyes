@@ -1,6 +1,10 @@
 *.jpg
 *.JPG
 *.gif
+*.GIF
+*.png
+*.tif
+
 *.ipynb
 .DS_Store
 two-eyes-examples

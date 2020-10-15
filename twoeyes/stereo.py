@@ -57,6 +57,9 @@ class Stereo:
             self.images[eye] = Image.open(self.filenames[eye])
             print("   success!")
 
+    def rotate_image(self, image):
+        return image
+
     def adjust(self):
         '''
         Let user click to identify a feature to line up in both images.
@@ -112,8 +115,8 @@ class Stereo:
         label = 'side-by-side'
 
         # convert images to arrays, but keep them as colors (width x height x 3)
-        left = np.array(self.images['left'])
-        right = np.array(self.images['right'])
+        left = np.array(self.rotate_image(self.images['left']))
+        right = np.array(self.rotate_image(self.images['right']))
 
         # construct a comined image by stacking the images side by side
         combined = Image.fromarray(np.hstack([left,right]))
@@ -134,11 +137,11 @@ class Stereo:
         label = 'red-cyan'
 
         # first convert images to black and white (width x height)
-        left = np.array(self.images['left'].convert('L'))
-        right = np.array(self.images['right'].convert('L'))
+        left = np.array(self.rotate_image(self.images['left'].convert('L')))
+        right = np.array(self.rotate_image(self.images['right'].convert('L')))
 
         # construct a combined image by populating the RGB channels
-        merged = np.zeros_like(np.array(self.images['left']))
+        merged = np.zeros_like(np.array(self.rotate_image(self.images['left'])))
         merged[:,:,0] += left
         merged[:,:,1] += right
         merged[:,:,2] += right
@@ -159,8 +162,8 @@ class Stereo:
         label = 'animated'
 
         # convert images to arrays, but keep them as colors (width x height x 3)
-        left = self.images['left']
-        right = self.images['right']
+        left = self.rotate_image(self.images['left'])
+        right = self.rotate_image(self.images['right'])
 
         # save to an image file
         base_filename = os.path.join(directory, f'{self.prefix}-{label}.gif')

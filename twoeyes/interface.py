@@ -1,6 +1,6 @@
 from .imports import *
 from .stereo import Stereo
-from ipywidgets import GridspecLayout, FileUpload, Output, Layout, VBox, HBox, Checkbox, Button
+from ipywidgets import GridspecLayout, FileUpload, Output, Layout, VBox, HBox, Checkbox, Button, RadioButtons
 from IPython.display import clear_output, display, HTML
 
 __all__ = ['MakeYourOwn']
@@ -34,8 +34,8 @@ class MakeYourOwn(Stereo):
         # create a dictionary to hold all the widgets
         self.widgets = {}
 
-        # create a widget to display some instrucions
-        self.widgets['instrucions'] = Output(layout=Layout(width=f'{(width+padding)*2}px'))
+        # create a widget to display some instructions
+        self.widgets['instructions'] = Output(layout=Layout(width=f'{(width+padding)*2}px'))
 
         # loop over two eyes
         for i, k in enumerate(['left', 'right']):
@@ -62,11 +62,22 @@ class MakeYourOwn(Stereo):
                                               self.widgets[f'{k}-text-output']],
                                          layout=Layout(height='auto', align_items='center', padding=f'{padding}px'))
 
+
+
+        # create rotation widgets
+        self.widgets['rotation'] = RadioButtons(
+                        options=['0˚', '90˚', '180˚', '270˚'],
+                        value='0˚',
+                        description='',
+                        layout=Layout(width=f'{width/4:.0f}px'))
+
         # create widgets for what kinds of stereographs to make
         self.widgets['do-redcyan'] = Checkbox(value=True, description='red/cyan', layout=Layout(width='auto'))
         self.widgets['do-gif'] = Checkbox(value=False, description='animated', layout=Layout(width='auto'))
         #self.widgets['do-sidebyside'] = Checkbox(value=False, description='sidebyside', layout=Layout(width='auto'))
-        options = VBox([self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(align_items='flex-start', width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
+
+        todo = VBox([self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(width=f'{3*width/4:.0f}px', align_items='flex-start'))
+        options = HBox([self.widgets['rotation'], todo], layout=Layout(width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
 
         # create widget for making the stereographs
         make = Button(description='Make stereograph(s)!',
@@ -84,14 +95,15 @@ class MakeYourOwn(Stereo):
         eyes_together = HBox([self.widgets['left-vbox'],
                               self.widgets['right-vbox']],
                               layout=Layout())
-        everything = VBox([self.widgets['instrucions'],
+        everything = VBox([self.widgets['instructions'],
                            eyes_together,
                            actions_together,
                            self.widgets['outputs']])
 
         # initialize the stereo viewer overall
         Stereo.__init__(self, prefix=prefix)
-
+        self.thumbnails = dict(left=None, right=None)
+        self.width = width
         # set initial instructions
         self.reset_instructions('Hi! Please upload two images to make a 3D image.')
         display(everything)
@@ -104,19 +116,41 @@ class MakeYourOwn(Stereo):
 
         # watch for new image uploads
         for eye in ['left', 'right']:
-            self.widgets[f'{eye}-upload'].observe(self.update_image,
-                                             names='value')
+            self.widgets[f'{eye}-upload'].observe(self.update_image, names='value')
+
+        # watch the rotation updates
+        self.widgets['rotation'].observe(self.update_rotation, names='value')
 
         # watch the button click
         self.widgets['make-button'].on_click(self.make_stereographs)
+
 
     def reset_instructions(self, message=''):
         '''
         Clear the instructions and add new text.
         '''
-        with self.widgets['instrucions']:
+        with self.widgets['instructions']:
             clear_output()
             print(message)
+
+    def rotate_image(self, image):
+        try:
+            rotation = float(self.widgets['rotation'].value[:-1])
+            return image.rotate(rotation, expand=True)
+        except AttributeError:
+            return image
+
+
+    def display_image(self, eye):
+        with self.widgets[f'{eye}-image-output']:
+            clear_output()
+            rotated = self.rotate_image(self.thumbnails[eye])
+            if rotated is not None:
+                display(rotated)
+
+    def update_rotation(self, change):
+        for eye in ['left', 'right']:
+            self.display_image(eye)
 
     def update_image(self, change):
         '''
@@ -135,7 +169,7 @@ class MakeYourOwn(Stereo):
         filename = uploaded.metadata[0]['name']
 
         # provide an update that this will take a while
-        with self.widgets['instrucions']:
+        with self.widgets['instructions']:
             clear_output()
             print(f'File {filename} is loading.\nPlease have patience (or upload a smaller image).')
 
@@ -149,9 +183,14 @@ class MakeYourOwn(Stereo):
 
         # load that file as a PIL image
         self.images[eye] = Image.open(local_image_filename)
-        with self.widgets[f'{eye}-image-output']:
-            clear_output()
-            display(self.images[eye])
+        aspect = self.images[eye].width/self.images[eye].height
+        if aspect > 1:
+            thumb_size = round(self.width*aspect), self.width
+        else:
+            thumb_size = self.width, round(self.width/aspect)
+        self.thumbnails[eye] = self.images[eye].copy()
+        self.thumbnails[eye].thumbnail(thumb_size)
+        self.display_image(eye)
 
         # print a summary of the image as text
         with self.widgets[f'{eye}-text-output']:
@@ -189,7 +228,7 @@ class MakeYourOwn(Stereo):
         if self.widgets['do-gif'].value:
             with self.widgets['outputs']:
                 filename = self.to_gif()
-            self.display_stereograph(filename)
+            #self.display_stereograph(filename)
 
     def display_stereograph(self, filename):
         '''
