@@ -1,7 +1,8 @@
 from .imports import *
 from .stereo import Stereo
-from ipywidgets import GridspecLayout, FileUpload, Output, Layout, VBox, HBox, Checkbox, Button, RadioButtons
+from ipywidgets import GridspecLayout, FileUpload, Output, Layout, VBox, HBox, Box, Checkbox, Button, RadioButtons, Label
 from IPython.display import clear_output, display, HTML
+from textwrap import wrap
 
 __all__ = ['MakeYourOwn']
 
@@ -9,7 +10,8 @@ class MakeYourOwn(Stereo):
     def __init__(self, prefix='stereograph',
                        width=300,
                        padding=10,
-                       colab=False):
+                       colab=False,
+                       phone=False):
         '''
         Initialize an object to make a stereograph interactively
         from within a jupyter notebook (including one that might
@@ -29,13 +31,88 @@ class MakeYourOwn(Stereo):
 
         # is this in colab?
         self.colab = colab
+        self.width = width
+        self.padding = padding
+        self.phone = phone
 
+        # create the widgets but don't add to layout
+        self.create_widgets()
+
+        if phone:
+            everything = self.create_phone_layout()
+        else:
+            everything = self.create_desktop_layout()
+
+        # initialize the stereo viewer overall
+        Stereo.__init__(self, prefix=prefix)
+        self.thumbnails = dict(left=None, right=None)
+
+        # set initial instructions
+        self.reset_instructions('Hi! Please upload two images to make a 3D image.')
+        display(everything)
+
+    def create_desktop_layout(self):
+        '''
+        Organize the widgets into a layout,
+        assuming a wide screen and a mouse.
+        '''
+
+        width = self.width
+        padding = self.padding
+
+        # set up the layout for the widgets
+        todo = VBox([Label('Output Types:'), self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(width=f'{3*width/4:.0f}px'))
+        labeled_rotation = VBox([Label('Rotation:'), self.widgets['rotation']])
+        options = HBox([labeled_rotation, todo], layout=Layout(width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
+
+        # group the widgets into layouts
+        actions_together = HBox([options, self.widgets['make-button']])
+        eyes_together = HBox([self.widgets['left-vbox'],
+                              self.widgets['right-vbox']],
+                              layout=Layout())
+        everything = VBox([self.widgets['instructions'],
+                           eyes_together,
+                           actions_together,
+                           self.widgets['outputs']])
+        return everything
+
+    def create_phone_layout(self):
+
+        '''
+        Organize the widgets into a layout,
+        assuming a wide screen and a mouse.
+        '''
+        width = self.width
+        padding = self.padding
+
+        # set up the layout for the widgets
+        todo = VBox([Label('Output Types:'), self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(border=f'2px solid green'))
+        labeled_rotation = VBox([Label('Rotation:'), self.widgets['rotation']])
+
+        options = VBox([labeled_rotation, todo], layout=Layout(border=f'2px solid green', width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
+        everything = VBox([self.widgets['instructions'],
+                           self.widgets['left-vbox'],
+                           self.widgets['right-vbox'],
+                           options,
+                           self.widgets['make-button'],
+                           self.widgets['outputs']],
+                           layout=Layout(border=f'2px solid green', width=f'{width+padding*2}px'))
+        return everything
+
+    def create_widgets(self):
+
+        width = self.width
+        padding = self.padding
+        if self.phone:
+            total = (width+padding)
+        else:
+            total = (width+padding)*2
 
         # create a dictionary to hold all the widgets
         self.widgets = {}
 
         # create a widget to display some instructions
-        self.widgets['instructions'] = Output(layout=Layout(width=f'{(width+padding)*2}px'))
+        self.widgets['instructions'] = Output(layout=Layout(width=f'{total}px'))
 
         # loop over two eyes
         for i, k in enumerate(['left', 'right']):
@@ -72,41 +149,21 @@ class MakeYourOwn(Stereo):
                         layout=Layout(width=f'{width/4:.0f}px'))
 
         # create widgets for what kinds of stereographs to make
-        self.widgets['do-redcyan'] = Checkbox(value=True, description='red/cyan', layout=Layout(width='auto'))
-        self.widgets['do-gif'] = Checkbox(value=False, description='animated', layout=Layout(width='auto'))
+        self.widgets['do-redcyan'] = Checkbox(value=True, indent=False, description='red/cyan', layout=Layout(width='auto'))
+        self.widgets['do-gif'] = Checkbox(value=False, indent=False,  description='animated', layout=Layout(width='auto'))
         #self.widgets['do-sidebyside'] = Checkbox(value=False, description='sidebyside', layout=Layout(width='auto'))
 
-        todo = VBox([self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(width=f'{3*width/4:.0f}px', align_items='flex-start'))
-        options = HBox([self.widgets['rotation'], todo], layout=Layout(width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
 
         # create widget for making the stereographs
-        make = Button(description='Make stereograph(s)!',
+        self.widgets['make-button'] = Button(description='Make stereograph(s)!',
                       tooltip='Make stereograph(s)!',
                       icon='check',
                       layout=Layout(width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
-        self.widgets['make-button'] = make
 
 
         # create widget for outputs
-        self.widgets['outputs'] = Output(layout=Layout(width=f'{(width + padding)*2}px'))
+        self.widgets['outputs'] = Output(layout=Layout(width=f'{total}px'))
 
-        # group the widgets into layouts
-        actions_together = HBox([options, make])
-        eyes_together = HBox([self.widgets['left-vbox'],
-                              self.widgets['right-vbox']],
-                              layout=Layout())
-        everything = VBox([self.widgets['instructions'],
-                           eyes_together,
-                           actions_together,
-                           self.widgets['outputs']])
-
-        # initialize the stereo viewer overall
-        Stereo.__init__(self, prefix=prefix)
-        self.thumbnails = dict(left=None, right=None)
-        self.width = width
-        # set initial instructions
-        self.reset_instructions('Hi! Please upload two images to make a 3D image.')
-        display(everything)
 
     def load(self, *args, **kwargs):
         '''
@@ -129,9 +186,13 @@ class MakeYourOwn(Stereo):
         '''
         Clear the instructions and add new text.
         '''
+        if self.phone:
+            characters = 30
+        else:
+            characters = 70
         with self.widgets['instructions']:
             clear_output()
-            print(message)
+            print('\n'.join(wrap(message, characters)))
 
     def rotate_image(self, image):
         try:
@@ -169,9 +230,7 @@ class MakeYourOwn(Stereo):
         filename = uploaded.metadata[0]['name']
 
         # provide an update that this will take a while
-        with self.widgets['instructions']:
-            clear_output()
-            print(f'File {filename} is loading.\nPlease have patience (or upload a smaller image).')
+        self.reset_instructions(f'File {filename} is loading.\nPlease have patience (or upload a smaller image).')
 
         # save the file, with its original extension
         extension = filename.split('.')[-1]
@@ -205,29 +264,40 @@ class MakeYourOwn(Stereo):
         else:
             self.reset_instructions('')
 
+    def write_output(self, message=''):
+        '''
+        Clear the instructions and add new text.
+        '''
+        if self.phone:
+            characters = 30
+        else:
+            characters = 70
+        with self.widgets['outputs']:
+            print('\n'.join(wrap(message, characters)) + '\n')
+
+
     def make_stereographs(self, change):
         '''
         Produce stereographs when the button is pressed.
         '''
         with self.widgets['outputs']:
             clear_output()
-            if self.images['left'] is None:
-                print('Please upload a left image.')
-                return
-            if self.images['right'] is None:
-                print('Please upload a right image.')
-                return
-            if (self.images['left'].width != self.images['right'].width) or (self.images['left'].height != self.images['right'].height):
-                print('Please upload images that are the same size!')
-                return
+
+        if self.images['left'] is None:
+            self.write_output('Please upload a left image.')
+            return
+        if self.images['right'] is None:
+            self.write_output('Please upload a right image.')
+            return
+        if (self.images['left'].width != self.images['right'].width) or (self.images['left'].height != self.images['right'].height):
+            self.write_output('Please upload images that are the same size!')
+            return
 
         if self.widgets['do-redcyan'].value:
-            with self.widgets['outputs']:
-                filename = self.to_anaglyph()
+            filename = self.to_anaglyph()
             self.display_stereograph(filename)
         if self.widgets['do-gif'].value:
-            with self.widgets['outputs']:
-                filename = self.to_gif()
+            filename = self.to_gif()
             #self.display_stereograph(filename)
 
     def display_stereograph(self, filename):
@@ -236,12 +306,8 @@ class MakeYourOwn(Stereo):
         '''
 
         with self.widgets['outputs']:
-            print(f'Displaying stereograph (may take a moment).')
+            self.write_output(f'Displaying stereograph (may take a moment).')
             if self.colab:
-                print('''
-        | In colaboratory, you can use the File Browser   |
-        | (folder icon) to directly access all newly      |
-        | created stereographic image files for download. |
-                ''')
+                self.write_output('''In colaboratory, you can use the File Browser (folder icon) to directly access all newly created stereographic image files for download.''')
             i = Image.open(filename)
             display(i)
