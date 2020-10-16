@@ -35,6 +35,7 @@ class MakeYourOwn(Stereo):
         self.padding = padding
         self.phone = phone
 
+        self.filenames = {}
         # create the widgets but don't add to layout
         self.create_widgets()
 
@@ -208,10 +209,25 @@ class MakeYourOwn(Stereo):
             rotated = self.rotate_image(self.thumbnails[eye])
             if rotated is not None:
                 display(rotated)
+                self.update_image_text(eye)
+
 
     def update_rotation(self, change):
         for eye in ['left', 'right']:
             self.display_image(eye)
+
+
+    def update_image_text(self, eye):
+        # print a summary of the image as text
+        with self.widgets[f'{eye}-text-output']:
+            clear_output()
+            actual_width, actual_height = self.images[eye].width, self.images[eye].height
+            rotation = float(self.widgets['rotation'].value[:-1])
+            if (rotation == 0) or (rotation == 180):
+                width, height = actual_width, actual_height
+            else:
+                width, height = actual_height, actual_width
+            print(f'{self.filenames[eye]}\n ({width}x{height} pixels)')
 
     def update_image(self, change):
         '''
@@ -234,6 +250,7 @@ class MakeYourOwn(Stereo):
 
         # save the file, with its original extension
         extension = filename.split('.')[-1]
+        self.filenames[eye] = filename
         file = uploaded.value[filename]
         bytes = file['content']
         local_image_filename = f'{eye}.{extension}'
@@ -251,10 +268,9 @@ class MakeYourOwn(Stereo):
         self.thumbnails[eye].thumbnail(thumb_size)
         self.display_image(eye)
 
-        # print a summary of the image as text
-        with self.widgets[f'{eye}-text-output']:
-            clear_output()
-            print(f'{filename}\n ({self.images[eye].width}x{self.images[eye].height} pixels)')
+        self.update_image_text(eye)
+
+
 
         # update instructions
         if (self.images['left'] is not None) and (self.images['right'] is not None):
