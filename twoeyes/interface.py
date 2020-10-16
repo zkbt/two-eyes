@@ -204,12 +204,12 @@ class MakeYourOwn(Stereo):
 
 
     def display_image(self, eye):
-        with self.widgets[f'{eye}-image-output']:
-            clear_output()
-            rotated = self.rotate_image(self.thumbnails[eye])
-            if rotated is not None:
+        rotated = self.rotate_image(self.thumbnails[eye])
+        if rotated is not None:
+            with self.widgets[f'{eye}-image-output']:
+                clear_output()
                 display(rotated)
-                self.update_image_text(eye)
+            self.update_image_text(eye)
 
 
     def update_rotation(self, change):
