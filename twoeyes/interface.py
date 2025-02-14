@@ -259,18 +259,7 @@ class MakeYourOwn(Stereo):
         local_image_filename = f'{eye}.{extension}'
         with open(local_image_filename,'wb') as f:
             f.write(bytes)
-<<<<<<< HEAD
-        print(f'wrote to {local_image_filename}')
-
-
-        img = np.array(Image.open(local_image_filename).convert('L'))
-
-        print(f'updating plot for {k}')
-        print(self.eyes[k]['ax'])
-        print(k)
-=======
->>>>>>> bf613650f03c8b88102c9bce203f27cbcdc58e17
-
+        
         # load that file as a PIL image
         self.images[eye] = Image.open(local_image_filename)
         aspect = self.images[eye].width/self.images[eye].height
