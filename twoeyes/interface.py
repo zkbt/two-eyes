@@ -260,8 +260,11 @@ class MakeYourOwn(Stereo):
         # save the file, with its original extension
         extension = filename.split('.')[-1]
         self.filenames[eye] = filename
-        #file = uploaded[filename]
-        bytes = uploaded['content']
+        if self.colab:
+            file = uploaded.value[filename]
+            bytes = file['content']
+        else:
+            bytes = uploaded['content']
         local_image_filename = f'{eye}.{extension}'
         with open(local_image_filename,'wb') as f:
             f.write(bytes)
