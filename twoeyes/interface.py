@@ -245,8 +245,14 @@ class MakeYourOwn(Stereo):
 
         # figure out the filename
         eye = change['owner'].description.split(' ')[1]
-        uploaded = change['new'][0]
-        filename = uploaded['name']
+        
+        # for some reasons uploading is slightly different locally than in colab
+        if self.colab:
+            uploaded = change['owner']
+            filename = uploaded.metadata[0]['name']
+        else:
+            uploaded = change['new'][0]
+            filename = uploaded['name']
 
         # provide an update that this will take a while
         self.reset_instructions(f'File {filename} is loading.\nPlease have patience (or upload a smaller image).')
