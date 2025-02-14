@@ -83,7 +83,7 @@ setup(
                       'scipy',
                       'matplotlib',
                       'ipywidgets>=7.5.1', 
-                      'pillow', 
+                      'pillow[libheif]', 
                       'pillow-heif'],
     # what version of Python is required?
     python_requires='>=3.6',
