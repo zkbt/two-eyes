@@ -334,8 +334,8 @@ class MakeYourOwn(Stereo):
         '''
 
         with self.widgets['outputs']:
-            self.write_output(f'Displaying stereograph (may take a moment).')
+            #self.write_output(f'Displaying stereograph (may take a moment).')
             if self.colab:
-                self.write_output('''In colaboratory, you can use the File Browser (folder icon) to directly access all newly created stereographic image files for download.''')
+                self.write_output('''Use the File Browser (📁) at left to access all newly created stereographic image files for download.''')
             i = Image.open(filename)
             display(i)
