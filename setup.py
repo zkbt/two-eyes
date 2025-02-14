@@ -82,8 +82,9 @@ setup(
     install_requires=['numpy',
                       'scipy',
                       'matplotlib',
-                      #'astropy>=4.0',
-                      'ipywidgets>=7.5.1'],
+                      'ipywidgets>=7.5.1', 
+                      'pillow', 
+                      'pillow-heif'],
     # what version of Python is required?
     python_requires='>=3.6',
     # requirements in `key` will install with `pip install the-cheerful-camera[key]`

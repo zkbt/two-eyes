@@ -1,6 +1,9 @@
 from .imports import *
 from ipywidgets import GridspecLayout, FileUpload, Output, Layout
 from IPython.display import clear_output
+from PIL import Image
+from pillow_heif import register_heif_opener
+register_heif_opener()
 
 
 class MakeStereo:
@@ -74,7 +77,10 @@ class MakeStereo:
         with open(local_image_filename,'wb') as f:
             f.write(bytes)
         print(f'wrote to {local_image_filename}')
-        img = plt.imread(local_image_filename)
+
+
+        img = np.array(Image.open(local_image_filename).convert('L'))
+
         print(f'updating plot for {k}')
         print(self.eyes[k]['ax'])
         print(k)
