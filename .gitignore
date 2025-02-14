@@ -1,7 +1,16 @@
 *.jpg
 *.JPG
+*.gif
+*.GIF
+*.png
+*.tif
+
 *.ipynb
 .DS_Store
+<<<<<<< HEAD
+=======
+two-eyes-examples
+>>>>>>> bf613650f03c8b88102c9bce203f27cbcdc58e17
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,9 +1,9 @@
 from .iplot import *
 
-
+__all__ = ['Stereo']
 def add_number_to_filename(filename, i):
     components = filename.split('.')
-    components[-2] += f'{i:03.0f}'
+    components[-2] += f'-{i:03.0f}'
     return '.'.join(components)
 
 def create_safe_filename(filename):
@@ -20,7 +20,7 @@ class Stereo:
     '''
     A generic stereographic image.
     '''
-    def __init__(self, left=None, right=None, prefix=''):
+    def __init__(self, left=None, right=None, prefix='stereograph'):
         '''
         Initialize a new stereograph.
 
@@ -31,6 +31,9 @@ class Stereo:
         right : str
             Filename of the right image.
         '''
+
+        # create a dictionary for the left and right images
+        self.images = dict(left=None, right=None)
 
         # load the images from their files
         self.load(left, right)
@@ -50,9 +53,12 @@ class Stereo:
         # loop over the eyes, loading the image for each
         for eye in ['left', 'right']:
             print(f"  loading {eye} eye's image from {self.filenames[eye]}")
-            # store images in self.left and self.right
-            self.__dict__[k] = Image.open(self.filenames[k])
+            # store images in self.images['left'] and self.images['right']
+            self.images[eye] = Image.open(self.filenames[eye])
             print("   success!")
+
+    def rotate_image(self, image):
+        return image
 
     def adjust(self):
         '''
@@ -86,7 +92,7 @@ class Stereo:
         nudgex, nudgey = self.referencepoints['right']-self.referencepoints['left']
 
         print(" Applying a nudge of {0} pixels between the two images.".format((nudgex,nudgey)))
-        left, right = np.array(self.left), np.array(self.right)
+        left, right = np.array(self.images['left']), np.array(self.images['right'])
         if nudgex > 0:
             left = left[:,:-nudgex]
             right = right[:,nudgex:]
@@ -99,47 +105,72 @@ class Stereo:
         else:
             left = left[-nudgey:, :]
             right = right[:nudgey, :]
-        self.left, self.right = Image.fromarray(left), Image.fromarray(right)
+        self.images['left'], self.images['right'] = Image.fromarray(left), Image.fromarray(right)
 
-    def to_sidebyside(self):
+    def write_output(self, message):
+        print(message)
+        
+    def to_sidebyside(self, directory=''):
         '''
         Output stereograph as a side-by-side image pair.
         '''
 
-        label = 'sidebyside'
+        label = 'side-by-side'
 
         # convert images to arrays, but keep them as colors (width x height x 3)
-        left = np.array(self.left)
-        right = np.array(self.right)
+        left = np.array(self.rotate_image(self.images['left']))
+        right = np.array(self.rotate_image(self.images['right']))
 
         # construct a comined image by stacking the images side by side
         combined = Image.fromarray(np.hstack([left,right]))
 
         # save to an image file
-        filename = create_safe_filename('{self.prefix}-{label}.jpg')
-        combined.save(create_safe_filename(filename))
+        base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
+        filename = create_safe_filename(base_filename)
+        combined.save(filename)
+        self.write_output(f'Saved {label} stereograph to {filename}')
         return filename
 
-    def to_anaglyph(self):
+    def to_anaglyph(self, directory=''):
         '''
         Output stereograph as a red-cyan image pair.
         '''
 
         # set the label
-        label = 'redcyan'
+        label = 'red-cyan'
 
         # first convert images to black and white (width x height)
-        left = np.array(self.left.convert('L'))
-        right = np.array(self.right.convert('L'))
+        left = np.array(self.rotate_image(self.images['left'].convert('L')))
+        right = np.array(self.rotate_image(self.images['right'].convert('L')))
 
         # construct a combined image by populating the RGB channels
-        merged = np.zeros_like(np.array(self.left))
+        merged = np.zeros_like(np.array(self.rotate_image(self.images['left'])))
         merged[:,:,0] += left
         merged[:,:,1] += right
         merged[:,:,2] += right
         combined = Image.fromarray(merged)
 
         # save to an image file
-        filename = create_safe_filename('{self.prefix}-{label}.jpg')
-        combined.save(create_safe_filename(filename))
+        base_filename = os.path.join(directory, f'{self.prefix}-{label}.jpg')
+        filename = create_safe_filename(base_filename)
+        combined.save(filename)
+        self.write_output(f'Saved {label} stereograph to {filename}')
+        return filename
+
+    def to_gif(self, directory=''):
+        '''
+        Output stereograph as an animated gif.
+        '''
+        # set the label
+        label = 'animated'
+
+        # convert images to arrays, but keep them as colors (width x height x 3)
+        left = self.rotate_image(self.images['left'])
+        right = self.rotate_image(self.images['right'])
+
+        # save to an image file
+        base_filename = os.path.join(directory, f'{self.prefix}-{label}.gif')
+        filename = create_safe_filename(base_filename)
+        left.save(filename, save_all=True, append_images=[right], optimize=True, duration=500, loop=0)
+        self.write_output(f'Saved {label} stereograph to {filename}')
         return filename
