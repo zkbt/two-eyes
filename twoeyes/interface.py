@@ -208,7 +208,7 @@ class MakeYourOwn(Stereo):
 
     def display_image(self, eye):
         rotated = self.rotate_image(self.thumbnails[eye])
-        if rotated is not None:
+        if rotated != None:
             with self.widgets[f'{eye}-image-output']:
                 clear_output()
                 display(rotated)
@@ -245,8 +245,8 @@ class MakeYourOwn(Stereo):
 
         # figure out the filename
         eye = change['owner'].description.split(' ')[1]
-        uploaded = change['owner']
-        filename = uploaded.metadata[0]['name']
+        uploaded = change['new'][0]
+        filename = uploaded['name']
 
         # provide an update that this will take a while
         self.reset_instructions(f'File {filename} is loading.\nPlease have patience (or upload a smaller image).')
@@ -254,8 +254,8 @@ class MakeYourOwn(Stereo):
         # save the file, with its original extension
         extension = filename.split('.')[-1]
         self.filenames[eye] = filename
-        file = uploaded.value[filename]
-        bytes = file['content']
+        #file = uploaded[filename]
+        bytes = uploaded['content']
         local_image_filename = f'{eye}.{extension}'
         with open(local_image_filename,'wb') as f:
             f.write(bytes)
@@ -276,7 +276,7 @@ class MakeYourOwn(Stereo):
 
 
         # update instructions
-        if (self.images['left'] is not None) and (self.images['right'] is not None):
+        if (self.images['left'] != None) and (self.images['right'] != None):
             self.reset_instructions("Two images have been uploaded. You're ready to make a stereograph!")
         elif (self.images['left'] is None) or (self.images['right'] is None):
             self.reset_instructions('Please upload a second image to make a 3D image.')
