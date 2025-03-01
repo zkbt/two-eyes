@@ -65,7 +65,15 @@ class MakeYourOwn(Stereo):
         padding = self.padding
 
         # set up the layout for the widgets
-        todo = VBox([Label('Output Types:'), self.widgets['do-redcyan'], self.widgets['do-gif']], layout=Layout(width=f'{3*width/4:.0f}px'))
+        todo = VBox(
+            [
+                Label('Output Types:'), 
+                self.widgets['do-redcyan'], 
+                self.widgets['do-redblue'], 
+                self.widgets['do-gif']
+            ], 
+            layout=Layout(width=f'{3*width/4:.0f}px')
+        )
         labeled_rotation = VBox([Label('Rotation:'), self.widgets['rotation']])
         options = HBox([labeled_rotation, todo], layout=Layout(width=f'{width}px', margin=f'0px {padding}px 0px {padding}px'))
 
@@ -154,6 +162,7 @@ class MakeYourOwn(Stereo):
 
         # create widgets for what kinds of stereographs to make
         self.widgets['do-redcyan'] = Checkbox(value=True, indent=False, description='red/cyan', layout=Layout(width='auto'))
+        self.widgets['do-redblue'] = Checkbox(value=False, indent=False, description='red/blue', Layout=Layout(width='auto'))
         self.widgets['do-gif'] = Checkbox(value=False, indent=False,  description='animated', layout=Layout(width='auto'))
         #self.widgets['do-sidebyside'] = Checkbox(value=False, description='sidebyside', layout=Layout(width='auto'))
 
@@ -322,7 +331,10 @@ class MakeYourOwn(Stereo):
             return
 
         if self.widgets['do-redcyan'].value:
-            filename = self.to_anaglyph()
+            filename = self.to_anaglyph(use_green=True)
+            self.display_stereograph(filename)
+        if self.widgets['do-redblue'].value:
+            filename = self.to_anaglyph(use_green=False)
             self.display_stereograph(filename)
         if self.widgets['do-gif'].value:
             filename = self.to_gif()

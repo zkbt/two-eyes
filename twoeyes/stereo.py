@@ -131,13 +131,14 @@ class Stereo:
         self.write_output(f'Saved {label} stereograph to {filename}')
         return filename
 
-    def to_anaglyph(self, directory=''):
+    def to_anaglyph(self, directory='', use_green = True):
         '''
-        Output stereograph as a red-cyan image pair.
+        Output stereograph as a red and cyan (or blue if use_green is false) image pair.
         '''
 
-        # set the label
-        label = 'red-cyan'
+        # set the label red-blue. Unfortunately computer monitors do not emit 
+        # cyan wavelength light
+        label = 'red-cyan' if use_green else 'red-blue'
 
         # first convert images to black and white (width x height)
         left = np.array(self.rotate_image(self.images['left'].convert('L')))
@@ -145,9 +146,19 @@ class Stereo:
 
         # construct a combined image by populating the RGB channels
         merged = np.zeros_like(np.array(self.rotate_image(self.images['left'])))
-        merged[:,:,0] += left
-        merged[:,:,1] += right
-        merged[:,:,2] += right
+
+        # right perspective image should be red
+        merged[:,:,0] += left 
+
+        # we have the option to remove green because it is not filtered by 
+        # either cyan or red lenses, causing part of the right image to show up 
+        # through the left (red) filter
+        merged[:,:,1] = right if use_green else 0
+
+        # left perspective image should be blue
+        merged[:,:,2] = right
+
+        # combine into image
         combined = Image.fromarray(merged)
 
         # save to an image file
